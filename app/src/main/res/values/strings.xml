@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Fancy Keyboard ⌨️</string>
+    <string name="setup_title">⌨️ Fancy Keyboard Setup</string>
+    <string name="step1">1️⃣ Step 1: Enable Dabao</string>
+    <string name="step2">2️⃣ Step 2: Choose Dabao</string>
+    <string name="howto">👑 = Fancy ON/OFF (toolbar me!)\nPehla BOLD + baqi small — Boss style!\nQ-row long-press = number 🔢\nUper words tap = suggestion ✨\n📋 toolbar = copy/paste!</string>
+    <string name="sym_key">\?123</string>
+    <string name="qmark">\?</string>
+    <string name="at_sign">\@</string>
+</resources>

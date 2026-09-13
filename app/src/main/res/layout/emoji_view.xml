@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A1A2E"
+    android:padding="4dp">
+
+    <!-- TOOLBAR -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="TOGGLE" android:text="👑" style="@style/KbTool" />
+        <Button android:tag="CLIP" android:text="📋" style="@style/KbTool" />
+        <Button android:tag="HIDE" android:text="⌨️" style="@style/KbTool" />
+        <View android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="6" />
+    </LinearLayout>
+
+    <!-- EMOJI GRID (8 x 5) -->
+    <GridLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="8">
+        <Button android:tag="😀" android:text="😀" style="@style/KbEmoji" />
+        <Button android:tag="😁" android:text="😁" style="@style/KbEmoji" />
+        <Button android:tag="😂" android:text="😂" style="@style/KbEmoji" />
+        <Button android:tag="🤣" android:text="🤣" style="@style/KbEmoji" />
+        <Button android:tag="😊" android:text="😊" style="@style/KbEmoji" />
+        <Button android:tag="😍" android:text="😍" style="@style/KbEmoji" />
+        <Button android:tag="😎" android:text="😎" style="@style/KbEmoji" />
+        <Button android:tag="🤔" android:text="🤔" style="@style/KbEmoji" />
+        <Button android:tag="😐" android:text="😐" style="@style/KbEmoji" />
+        <Button android:tag="🙄" android:text="🙄" style="@style/KbEmoji" />
+        <Button android:tag="😴" android:text="😴" style="@style/KbEmoji" />
+        <Button android:tag="😷" android:text="😷" style="@style/KbEmoji" />
+        <Button android:tag="🤯" android:text="🤯" style="@style/KbEmoji" />
+        <Button android:tag="🥳" android:text="🥳" style="@style/KbEmoji" />
+        <Button android:tag="😭" android:text="😭" style="@style/KbEmoji" />
+        <Button android:tag="😡" android:text="😡" style="@style/KbEmoji" />
+        <Button android:tag="👍" android:text="👍" style="@style/KbEmoji" />
+        <Button android:tag="👎" android:text="👎" style="@style/KbEmoji" />
+        <Button android:tag="🙏" android:text="🙏" style="@style/KbEmoji" />
+        <Button android:tag="👏" android:text="👏" style="@style/KbEmoji" />
+        <Button android:tag="💪" android:text="💪" style="@style/KbEmoji" />
+        <Button android:tag="🔥" android:text="🔥" style="@style/KbEmoji" />
+        <Button android:tag="❤" android:text="❤" style="@style/KbEmoji" />
+        <Button android:tag="💔" android:text="💔" style="@style/KbEmoji" />
+        <Button android:tag="✨" android:text="✨" style="@style/KbEmoji" />
+        <Button android:tag="🎉" android:text="🎉" style="@style/KbEmoji" />
+        <Button android:tag="⚽" android:text="⚽" style="@style/KbEmoji" />
+        <Button android:tag="🏏" android:text="🏏" style="@style/KbEmoji" />
+        <Button android:tag="🌙" android:text="🌙" style="@style/KbEmoji" />
+        <Button android:tag="⭐" android:text="⭐" style="@style/KbEmoji" />
+        <Button android:tag="🎤" android:text="🎤" style="@style/KbEmoji" />
+        <Button android:tag="🎧" android:text="🎧" style="@style/KbEmoji" />
+        <Button android:tag="📱" android:text="📱" style="@style/KbEmoji" />
+        <Button android:tag="💻" android:text="💻" style="@style/KbEmoji" />
+        <Button android:tag="🍕" android:text="🍕" style="@style/KbEmoji" />
+        <Button android:tag="🍔" android:text="🍔" style="@style/KbEmoji" />
+        <Button android:tag="⚡" android:text="⚡" style="@style/KbEmoji" />
+        <Button android:tag="💯" android:text="💯" style="@style/KbEmoji" />
+        <Button android:tag="✔" android:text="✔" style="@style/KbEmoji" />
+        <Button android:tag="❌" android:text="❌" style="@style/KbEmoji" />
+    </GridLayout>
+
+    <!-- BOTTOM -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="ABC" android:text="ABC" style="@style/KbKeyWideDark" />
+        <Button android:tag="SPACE" android:text="space" style="@style/KbKeySpace" />
+        <Button android:tag="BACK" android:text="⌫" style="@style/KbKeyWideDark" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="#1A1A2E"
+    android:padding="4dp">
+
+    <!-- TOOLBAR: 👑 📋 ⌨️ -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="TOGGLE" android:text="👑" style="@style/KbTool" />
+        <Button android:tag="CLIP" android:text="📋" style="@style/KbTool" />
+        <Button android:tag="HIDE" android:text="⌨️" style="@style/KbTool" />
+        <View android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="6" />
+    </LinearLayout>
+
+    <!-- SUGGESTIONS ✨ -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <TextView android:id="@+id/sug0" style="@style/KbSug" android:text="han" />
+        <TextView android:id="@+id/sug1" style="@style/KbSug" android:text="acha" android:textStyle="bold" android:textColor="#C4B5FD" />
+        <TextView android:id="@+id/sug2" style="@style/KbSug" android:text="ok" />
+    </LinearLayout>
+
+    <!-- ROW 1 -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="q" android:text="Q" style="@style/KbKey" />
+        <Button android:tag="w" android:text="W" style="@style/KbKey" />
+        <Button android:tag="e" android:text="E" style="@style/KbKey" />
+        <Button android:tag="r" android:text="R" style="@style/KbKey" />
+        <Button android:tag="t" android:text="T" style="@style/KbKey" />
+        <Button android:tag="y" android:text="Y" style="@style/KbKey" />
+        <Button android:tag="u" android:text="U" style="@style/KbKey" />
+        <Button android:tag="i" android:text="I" style="@style/KbKey" />
+        <Button android:tag="o" android:text="O" style="@style/KbKey" />
+        <Button android:tag="p" android:text="P" style="@style/KbKey" />
+    </LinearLayout>
+
+    <!-- ROW 2 -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="a" android:text="A" style="@style/KbKey" />
+        <Button android:tag="s" android:text="S" style="@style/KbKey" />
+        <Button android:tag="d" android:text="D" style="@style/KbKey" />
+        <Button android:tag="f" android:text="F" style="@style/KbKey" />
+        <Button android:tag="g" android:text="G" style="@style/KbKey" />
+        <Button android:tag="h" android:text="H" style="@style/KbKey" />
+        <Button android:tag="j" android:text="J" style="@style/KbKey" />
+        <Button android:tag="k" android:text="K" style="@style/KbKey" />
+        <Button android:tag="l" android:text="L" style="@style/KbKey" />
+    </LinearLayout>
+
+    <!-- ROW 3 -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="SHIFT" android:text="⇧" style="@style/KbKeyWideDark" />
+        <Button android:tag="z" android:text="Z" style="@style/KbKey" />
+        <Button android:tag="x" android:text="X" style="@style/KbKey" />
+        <Button android:tag="c" android:text="C" style="@style/KbKey" />
+        <Button android:tag="v" android:text="V" style="@style/KbKey" />
+        <Button android:tag="b" android:text="B" style="@style/KbKey" />
+        <Button android:tag="n" android:text="N" style="@style/KbKey" />
+        <Button android:tag="m" android:text="M" style="@style/KbKey" />
+        <Button android:tag="BACK" android:text="⌫" style="@style/KbKeyWideDark" />
+    </LinearLayout>
+
+    <!-- ROW 4 (Gboard!) -->
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <Button android:tag="SYM" android:text="@string/sym_key" style="@style/KbKeyWideDark" />
+        <Button android:tag="," android:text="," style="@style/KbKey" />
+        <Button android:tag="EMOJI" android:text="😀" style="@style/KbKey" />
+        <Button android:tag="SPACE" android:text="space" style="@style/KbKeySpace" />
+        <Button android:tag="." android:text="." style="@style/KbKey" />
+        <Button android:tag="ENTER" android:text="⏎" style="@style/KbKeyWideAccent" />
+    </LinearLayout>
+
+</LinearLayout>

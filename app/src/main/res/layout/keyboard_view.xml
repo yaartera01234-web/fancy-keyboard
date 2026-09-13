@@ -35,8 +35,9 @@
         <Button android:tag="p" android:text="P" style="@style/KbKey" />
     </LinearLayout>
 
-    <!-- ROW 2 -->
+    <!-- ROW 2 (stagger fix! ↔️) -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+        <View android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="0.5" />
         <Button android:tag="a" android:text="A" style="@style/KbKey" />
         <Button android:tag="s" android:text="S" style="@style/KbKey" />
         <Button android:tag="d" android:text="D" style="@style/KbKey" />
@@ -46,6 +47,7 @@
         <Button android:tag="j" android:text="J" style="@style/KbKey" />
         <Button android:tag="k" android:text="K" style="@style/KbKey" />
         <Button android:tag="l" android:text="L" style="@style/KbKey" />
+        <View android:layout_width="0dp" android:layout_height="50dp" android:layout_weight="0.5" />
     </LinearLayout>
 
     <!-- ROW 3 -->

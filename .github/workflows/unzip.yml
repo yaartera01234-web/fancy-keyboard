@@ -1,0 +1,28 @@
+name: Unzip Project 📦
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unzip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout ⬇️
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Unzip + Commit 📦
+        run: |
+          unzip -o fancy-keyboard.zip
+          rm -rf fancy-keyboard/.github
+          cp -a fancy-keyboard/. .
+          rm -rf fancy-keyboard fancy-keyboard.zip
+          git config user.name "kb-bot"
+          git config user.email "kb-bot@local"
+          git add -A
+          git commit -m "v3 project files ⌨️" || echo "nothing to commit"
+          git push

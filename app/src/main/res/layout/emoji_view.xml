@@ -14,52 +14,44 @@
         <View android:layout_width="0dp" android:layout_height="38dp" android:layout_weight="6" />
     </LinearLayout>
 
-    <!-- EMOJI GRID (8 x 5) -->
-    <GridLayout
+    <!-- Emoji categories are filled from the Unicode catalog in FancyIME.kt. -->
+    <HorizontalScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:columnCount="8">
-        <Button android:tag="😀" android:text="😀" style="@style/KbEmoji" />
-        <Button android:tag="😁" android:text="😁" style="@style/KbEmoji" />
-        <Button android:tag="😂" android:text="😂" style="@style/KbEmoji" />
-        <Button android:tag="🤣" android:text="🤣" style="@style/KbEmoji" />
-        <Button android:tag="😊" android:text="😊" style="@style/KbEmoji" />
-        <Button android:tag="😍" android:text="😍" style="@style/KbEmoji" />
-        <Button android:tag="😎" android:text="😎" style="@style/KbEmoji" />
-        <Button android:tag="🤔" android:text="🤔" style="@style/KbEmoji" />
-        <Button android:tag="😐" android:text="😐" style="@style/KbEmoji" />
-        <Button android:tag="🙄" android:text="🙄" style="@style/KbEmoji" />
-        <Button android:tag="😴" android:text="😴" style="@style/KbEmoji" />
-        <Button android:tag="😷" android:text="😷" style="@style/KbEmoji" />
-        <Button android:tag="🤯" android:text="🤯" style="@style/KbEmoji" />
-        <Button android:tag="🥳" android:text="🥳" style="@style/KbEmoji" />
-        <Button android:tag="😭" android:text="😭" style="@style/KbEmoji" />
-        <Button android:tag="😡" android:text="😡" style="@style/KbEmoji" />
-        <Button android:tag="👍" android:text="👍" style="@style/KbEmoji" />
-        <Button android:tag="👎" android:text="👎" style="@style/KbEmoji" />
-        <Button android:tag="🙏" android:text="🙏" style="@style/KbEmoji" />
-        <Button android:tag="👏" android:text="👏" style="@style/KbEmoji" />
-        <Button android:tag="💪" android:text="💪" style="@style/KbEmoji" />
-        <Button android:tag="🔥" android:text="🔥" style="@style/KbEmoji" />
-        <Button android:tag="❤" android:text="❤" style="@style/KbEmoji" />
-        <Button android:tag="💔" android:text="💔" style="@style/KbEmoji" />
-        <Button android:tag="✨" android:text="✨" style="@style/KbEmoji" />
-        <Button android:tag="🎉" android:text="🎉" style="@style/KbEmoji" />
-        <Button android:tag="⚽" android:text="⚽" style="@style/KbEmoji" />
-        <Button android:tag="🏏" android:text="🏏" style="@style/KbEmoji" />
-        <Button android:tag="🌙" android:text="🌙" style="@style/KbEmoji" />
-        <Button android:tag="⭐" android:text="⭐" style="@style/KbEmoji" />
-        <Button android:tag="🎤" android:text="🎤" style="@style/KbEmoji" />
-        <Button android:tag="🎧" android:text="🎧" style="@style/KbEmoji" />
-        <Button android:tag="📱" android:text="📱" style="@style/KbEmoji" />
-        <Button android:tag="💻" android:text="💻" style="@style/KbEmoji" />
-        <Button android:tag="🍕" android:text="🍕" style="@style/KbEmoji" />
-        <Button android:tag="🍔" android:text="🍔" style="@style/KbEmoji" />
-        <Button android:tag="⚡" android:text="⚡" style="@style/KbEmoji" />
-        <Button android:tag="💯" android:text="💯" style="@style/KbEmoji" />
-        <Button android:tag="✔" android:text="✔" style="@style/KbEmoji" />
-        <Button android:tag="❌" android:text="❌" style="@style/KbEmoji" />
-    </GridLayout>
+        android:scrollbars="none"
+        android:overScrollMode="never">
+        <LinearLayout
+            android:id="@+id/emoji_categories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal" />
+    </HorizontalScrollView>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+        <Button android:tag="EMOJI_PREV" android:text="‹" style="@style/KbTool" />
+        <TextView
+            android:id="@+id/emoji_page_label"
+            android:layout_width="0dp"
+            android:layout_height="38dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="😀 1/1"
+            android:textColor="#C4B5FD"
+            android:textSize="13sp" />
+        <Button android:tag="EMOJI_NEXT" android:text="›" style="@style/KbTool" />
+    </LinearLayout>
+
+    <GridLayout
+        android:id="@+id/emoji_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:columnCount="8"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="false" />
 
     <!-- BOTTOM -->
     <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">

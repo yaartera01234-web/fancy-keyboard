@@ -9,15 +9,21 @@ import android.os.Handler
 import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
+import android.text.InputType
 import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.GridLayout
+import android.widget.LinearLayout
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.ExtractedTextRequest
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.Locale
 
 class FancyIME : InputMethodService() {
 
@@ -29,6 +35,19 @@ class FancyIME : InputMethodService() {
     private var toggleBtn: Button? = null
     private var sugViews: List<TextView> = emptyList()
     private var clipPreview: TextView? = null
+
+    // Personal word learning stays local to this phone. Password fields are ignored.
+    private val wordPrefs by lazy { getSharedPreferences("fancy_keyboard_words", Context.MODE_PRIVATE) }
+    private val learnedWords: MutableMap<String, Int> by lazy { loadLearnedWords() }
+
+    // Emoji catalog/navigation state. The catalog itself is bundled in EmojiCatalog.kt.
+    private var emojiCategoryIndex = 0
+    private var emojiPage = 0
+    private var emojiGrid: GridLayout? = null
+    private var emojiPageLabel: TextView? = null
+    private val emojiPageSize = 48
+    private val maxLearnedWords = 5000
+    private val emojiPrefs by lazy { getSharedPreferences("fancy_keyboard_emoji", Context.MODE_PRIVATE) }
 
     private val backHandler = Handler(Looper.getMainLooper())
     private val backRunnable = object : Runnable {
@@ -69,7 +88,13 @@ class FancyIME : InputMethodService() {
         "din", "kal", "aj", "aaj", "abhi", "phir", "lekin", "magar",
         "shayad", "bilkul", "pakka", "done", "uff", "hmm", "sahi",
         "ghalat", "love", "miss", "good", "night", "morning", "bye",
-        "welcome", "maza", "bhai", "dost", "khabar", "sunao", "bolo"
+        "welcome", "maza", "bhai", "dost", "khabar", "sunao", "bolo",
+        // Common completions so they work before the personal dictionary learns them.
+        "efficient", "efficiency", "effective", "effectively", "important",
+        "beautiful", "different", "because", "something", "working",
+        "download", "keyboard", "suggestion", "suggestions", "message",
+        "friend", "friends", "today", "tomorrow", "always", "really",
+        "please", "already", "available", "correct", "change", "changing"
     )
 
     private fun boldOf(upper: Char): String {
@@ -104,34 +129,10 @@ class FancyIME : InputMethodService() {
 
     private fun makeView(layoutId: Int): View {
         val v = layoutInflater.inflate(layoutId, null)
+        if (layoutId == R.layout.emoji_view) setupEmojiView(v)
         val all = mutableListOf<Button>()
         collectButtons(v, all)
-        for (b in all) {
-            val tag = b.tag as String
-            if (tag == "BACK") {
-                // press-and-hold = lagatar delete! 🔥
-                b.setOnTouchListener { _, ev ->
-                    when (ev.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            tick()
-                            deleteChar()
-                            backHandler.postDelayed(backRunnable, 400)
-                            true
-                        }
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                            backHandler.removeCallbacks(backRunnable)
-                            true
-                        }
-                        else -> false
-                    }
-                }
-            } else {
-                b.setOnClickListener { tick(); onKey(tag) }
-                digitMap[tag]?.let { d ->
-                    b.setOnLongClickListener { tick(); currentInputConnection?.commitText(d, 1); updateSugg(); true }
-                }
-            }
-        }
+        for (b in all) bindButton(b)
         shiftBtn = v.findViewWithTag("SHIFT")
         toggleBtn = v.findViewWithTag("TOGGLE")
         val s0: TextView? = v.findViewById(R.id.sug0)
@@ -146,6 +147,116 @@ class FancyIME : InputMethodService() {
         return v
     }
 
+    private fun bindButton(b: Button) {
+        val tag = b.tag as? String ?: return
+        if (tag == "BACK") {
+            // press-and-hold = lagatar delete! 🔥
+            b.setOnTouchListener { _, ev ->
+                when (ev.action) {
+                    MotionEvent.ACTION_DOWN -> {
+                        tick()
+                        deleteChar()
+                        backHandler.postDelayed(backRunnable, 400)
+                        true
+                    }
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                        backHandler.removeCallbacks(backRunnable)
+                        true
+                    }
+                    else -> false
+                }
+            }
+        } else {
+            b.setOnClickListener { tick(); onKey(tag) }
+            digitMap[tag]?.let { d ->
+                b.setOnLongClickListener { tick(); currentInputConnection?.commitText(d, 1); updateSugg(); true }
+            }
+        }
+    }
+
+    private fun dp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
+
+    private fun emojiGroups(): List<EmojiCategory> {
+        val recent = readRecentEmoji()
+        val recentItems = if (recent.isEmpty()) {
+            listOf("😀", "😂", "❤️", "🤣", "😍", "🥰", "😊", "👍", "🙏", "🔥", "🥳", "😭", "👏", "😎", "✨", "💯")
+        } else recent
+        return listOf(EmojiCategory("Recently used", "🕘", recentItems)) + EmojiCatalog.categories
+    }
+
+    private fun setupEmojiView(v: View) {
+        emojiGrid = v.findViewById(R.id.emoji_grid)
+        emojiPageLabel = v.findViewById(R.id.emoji_page_label)
+        val categoryBar: LinearLayout? = v.findViewById(R.id.emoji_categories)
+        categoryBar?.removeAllViews()
+        val groups = emojiGroups()
+        groups.forEachIndexed { index, group ->
+            val button = Button(this, null, 0, R.style.KbTool)
+            button.tag = "EMOJI_CAT:$index"
+            button.text = group.icon
+            button.contentDescription = group.title
+            button.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18f)
+            button.layoutParams = LinearLayout.LayoutParams(dp(48), dp(38)).apply {
+                setMargins(dp(2), dp(1), dp(2), dp(1))
+            }
+            categoryBar?.addView(button)
+        }
+        renderEmojiPage()
+    }
+
+    private fun renderEmojiPage() {
+        val grid = emojiGrid ?: return
+        val label = emojiPageLabel ?: return
+        val groups = emojiGroups()
+        if (groups.isEmpty()) return
+        emojiCategoryIndex = emojiCategoryIndex.coerceIn(0, groups.lastIndex)
+        val group = groups[emojiCategoryIndex]
+        val items = group.emojis.ifEmpty { listOf("😀") }
+        val pageCount = ((items.size + emojiPageSize - 1) / emojiPageSize).coerceAtLeast(1)
+        emojiPage = emojiPage.coerceIn(0, pageCount - 1)
+        val from = emojiPage * emojiPageSize
+        val to = minOf(from + emojiPageSize, items.size)
+        grid.removeAllViews()
+        items.subList(from, to).forEach { emoji ->
+            val button = Button(this, null, 0, R.style.KbEmoji)
+            button.tag = "EMOJI_ITEM:$emoji"
+            button.text = emoji
+            button.contentDescription = "Emoji $emoji"
+            val lp = GridLayout.LayoutParams(
+                GridLayout.spec(GridLayout.UNDEFINED, 1f),
+                GridLayout.spec(GridLayout.UNDEFINED, 1f)
+            )
+            lp.width = 0
+            lp.height = dp(48)
+            lp.setMargins(dp(2), dp(2), dp(2), dp(2))
+            button.layoutParams = lp
+            grid.addView(button)
+            bindButton(button)
+        }
+        label.text = "${group.icon} ${emojiPage + 1}/$pageCount"
+    }
+
+    private fun readRecentEmoji(): List<String> {
+        val result = mutableListOf<String>()
+        try {
+            val array = JSONArray(emojiPrefs.getString("recent", "[]") ?: "[]")
+            for (i in 0 until array.length()) result.add(array.optString(i))
+        } catch (_: Exception) {
+        }
+        return result.filter { it.isNotEmpty() }.take(30)
+    }
+
+    private fun rememberEmoji(emoji: String) {
+        val recent = mutableListOf(emoji)
+        recent.addAll(readRecentEmoji().filter { it != emoji })
+        try {
+            val array = JSONArray()
+            recent.take(30).forEach { array.put(it) }
+            emojiPrefs.edit().putString("recent", array.toString()).apply()
+        } catch (_: Exception) {
+        }
+    }
+
     private fun collectButtons(v: View, out: MutableList<Button>) {
         if (v is Button) { out.add(v); return }
         if (v is ViewGroup) {
@@ -158,6 +269,11 @@ class FancyIME : InputMethodService() {
         isUpper = false
         refreshKeys()
         updateSugg()
+    }
+
+    override fun onFinishInput() {
+        learnCurrentWord()
+        super.onFinishInput()
     }
 
     private fun refreshKeys() {
@@ -217,27 +333,100 @@ class FancyIME : InputMethodService() {
         return Pair(plain.reverse().toString(), units)
     }
 
+    private fun learningAllowed(): Boolean {
+        val type = currentInputEditorInfo?.inputType ?: return false
+        val cls = type and InputType.TYPE_MASK_CLASS
+        val variation = type and InputType.TYPE_MASK_VARIATION
+        if (cls == InputType.TYPE_CLASS_NUMBER || cls == InputType.TYPE_CLASS_DATETIME) return false
+        return variation != InputType.TYPE_TEXT_VARIATION_PASSWORD &&
+            variation != InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD &&
+            variation != InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+    }
+
+    private fun normalWord(word: String): String {
+        return word.trim().lowercase(Locale.ROOT).filter { it.isLetter() }
+    }
+
+    private fun loadLearnedWords(): MutableMap<String, Int> {
+        val result = mutableMapOf<String, Int>()
+        try {
+            val json = JSONObject(wordPrefs.getString("words", "{}") ?: "{}")
+            val keys = json.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val count = json.optInt(key, 0)
+                if (key.length >= 2 && count > 0) result[key] = count
+            }
+        } catch (_: Exception) {
+        }
+        return result
+    }
+
+    private fun saveLearnedWords() {
+        try {
+            val json = JSONObject()
+            learnedWords.forEach { (word, count) -> json.put(word, count) }
+            wordPrefs.edit().putString("words", json.toString()).apply()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun learnWord(word: String) {
+        if (!learningAllowed()) return
+        val clean = normalWord(word)
+        if (clean.length < 2 || clean.length > 32 || clean.any { it.isDigit() }) return
+        learnedWords[clean] = ((learnedWords[clean] ?: 0) + 1).coerceAtMost(999)
+        if (learnedWords.size > maxLearnedWords) {
+            val keep = learnedWords.entries
+                .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
+                .take(maxLearnedWords)
+                .associate { it.key to it.value }
+            learnedWords.clear()
+            learnedWords.putAll(keep)
+        }
+        saveLearnedWords()
+    }
+
+    private fun learnCurrentWord() = learnWord(currentWord().first)
+
+    private fun rankedCompletions(prefix: String): List<String> {
+        return (WORDS + learnedWords.keys)
+            .asSequence()
+            .map { it.lowercase(Locale.ROOT) }
+            .distinct()
+            .filter { it.startsWith(prefix) && it != prefix }
+            .sortedWith(
+                compareByDescending<String> { learnedWords[it] ?: 0 }
+                    .thenBy { it.length }
+                    .thenBy { it }
+            )
+            .toList()
+    }
+
     private fun updateSugg() {
         if (sugViews.size < 3) return
         val (plain, _) = currentWord()
         val list: List<String> = if (plain.isEmpty()) {
-            listOf("han", "acha", "ok")
+            val learned = learnedWords.entries
+                .sortedWith(compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key })
+                .map { it.key }
+            (learned + listOf("han", "acha", "ok", "boss", "haha")).distinct().take(3)
         } else {
-            val m = WORDS.filter { it.startsWith(plain) && it != plain }.take(2)
             val out = mutableListOf(plain)
-            out.addAll(m)
+            out.addAll(rankedCompletions(plain).take(2))
             for (d in listOf("han", "acha", "ok", "boss", "haha")) {
                 if (out.size >= 3) break
                 if (!out.contains(d)) out.add(d)
             }
             out
         }
-        for (i in 0..2) sugViews[i].text = list[i]
+        for (i in 0..2) sugViews[i].text = list.getOrElse(i) { "" }
     }
 
     private fun pickSugg(w: String) {
         val ic = currentInputConnection ?: return
-        val (_, units) = currentWord()
+        val (plain, units) = currentWord()
+        if (w.lowercase(Locale.ROOT) != plain) learnWord(w)
         if (units > 0) ic.deleteSurroundingText(units, 0)
         val out = if (fancyMode) fancyWord(w.lowercase()) else w
         ic.commitText("$out ", 1)
@@ -296,22 +485,43 @@ class FancyIME : InputMethodService() {
 
     private fun onKey(tag: String) {
         val ic = currentInputConnection ?: return
-        when (tag) {
-            "SHIFT" -> { isUpper = !isUpper; refreshKeys() }
-            "TOGGLE" -> { fancyMode = !fancyMode; refreshKeys() }
-            "SYM" -> setMode(1)
-            "ABC" -> setMode(0)
-            "SYMPAGE" -> setMode(if (viewMode == 2) 1 else 2)
-            "EMOJI" -> setMode(3)
-            "CLIP" -> setMode(4)
-            "HIDE" -> requestHideSelf(0)
-            "COPY" -> doCopy()
-            "PASTE" -> doPaste()
-            "ENTER" -> {
+        when {
+            tag.startsWith("EMOJI_CAT:") -> {
+                emojiCategoryIndex = tag.substringAfter(":").toIntOrNull() ?: 0
+                emojiPage = 0
+                renderEmojiPage()
+            }
+            tag == "EMOJI_PREV" -> {
+                emojiPage--
+                renderEmojiPage()
+            }
+            tag == "EMOJI_NEXT" -> {
+                emojiPage++
+                renderEmojiPage()
+            }
+            tag.startsWith("EMOJI_ITEM:") -> {
+                val emoji = tag.removePrefix("EMOJI_ITEM:")
+                rememberEmoji(emoji)
+                ic.commitText(emoji, 1)
+                updateSugg()
+            }
+            tag == "SHIFT" -> { isUpper = !isUpper; refreshKeys() }
+            tag == "TOGGLE" -> { fancyMode = !fancyMode; refreshKeys() }
+            tag == "SYM" -> setMode(1)
+            tag == "ABC" -> setMode(0)
+            tag == "SYMPAGE" -> setMode(if (viewMode == 2) 1 else 2)
+            tag == "EMOJI" -> setMode(3)
+            tag == "CLIP" -> setMode(4)
+            tag == "HIDE" -> requestHideSelf(0)
+            tag == "COPY" -> doCopy()
+            tag == "PASTE" -> doPaste()
+            tag == "ENTER" -> {
+                learnCurrentWord()
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_ENTER))
                 ic.sendKeyEvent(KeyEvent(KeyEvent.ACTION_UP, KeyEvent.KEYCODE_ENTER))
             }
-            "SPACE" -> {
+            tag == "SPACE" -> {
+                learnCurrentWord()
                 // double-tap space = ". " ✨
                 val now = System.currentTimeMillis()
                 if (now - lastSpaceTime < 400) {
@@ -326,10 +536,11 @@ class FancyIME : InputMethodService() {
             }
             else -> {
                 // emoji (2 units) = poora commit! 😀
-                if (tag.length > 1) { ic.commitText(tag, 1); updateSugg(); return }
+                if (tag.length > 1) { learnCurrentWord(); ic.commitText(tag, 1); updateSugg(); return }
                 val ch = tag[0]
                 // numbers/symbols = as-is (koi fancy nahi!)
                 if (!ch.isLetter()) {
+                    learnCurrentWord()
                     ic.commitText(ch.toString(), 1)
                     updateSugg()
                     return
